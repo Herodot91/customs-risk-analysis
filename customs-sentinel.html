@@ -3664,6 +3664,14 @@ function DriverPortal({ onBack, onDeclSubmit }) {
   const [result, setResult] = useState(null);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
   const [portalTab, setPortalTab] = useState('declaration');
+  const [petition, setPetition] = useState({
+    mrn:'', lastName:'', firstName:'', idnp:'', phone:'', email:'',
+    decisionType:'', channelAssigned:'', groundsDisputed:'', facts:'',
+    remedy:'', attachments:'', consent:false
+  });
+  const [petitionSubmitted, setPetitionSubmitted] = useState(false);
+  const [petitionRef, setPetitionRef] = useState('');
+  const setP = (k,v) => setPetition(p=>({...p,[k]:v}));
   const [bqsForm, setBqsForm] = useState({name:'',company:'',plate:'',ccp:'',date:'',time:'',cargoDesc:'',weight:'',contact:''});
   const [bqsBooked, setBqsBooked] = useState(false);
   const [bqsRef, setBqsRef] = useState('');
@@ -3809,7 +3817,7 @@ function DriverPortal({ onBack, onDeclSubmit }) {
 
     <!-- Portal tab navigation -->
     <div style="background:linear-gradient(135deg,#1e3a8a,#1e40af);padding:.5rem 1.5rem 0;display:flex;gap:.25rem;overflow-x:auto">
-      ${[['declaration','📋 Declaration'],['bqs','📅 BQS Reservation'],['ncts','🔄 NCTS Transit']].map(([id,lbl])=>html`
+      ${[['declaration','📋 Declaration'],['bqs','📅 BQS Reservation'],['ncts','🔄 NCTS Transit'],['petition','📝 Petition / Contestație']].map(([id,lbl])=>html`
         <button key=${id} type="button" onClick=${()=>setPortalTab(id)}
           style=${{padding:'.625rem 1.5rem',borderRadius:'.5rem .5rem 0 0',fontSize:'13px',fontWeight:700,
             cursor:'pointer',border:'none',whiteSpace:'nowrap',
@@ -4287,6 +4295,193 @@ function DriverPortal({ onBack, onDeclSubmit }) {
             </button>
           </div>`}
       </div>
+    </div>` : null}
+
+    <!-- PETITION TAB -->
+    ${portalTab==='petition' ? html`
+    <div class="p-6 maxw-4xl mx-auto sy5" style="max-width:48rem">
+
+      <!-- GovTech Header -->
+      <div style="background:linear-gradient(135deg,#1e3a8a,#7c3aed);border-radius:1.125rem;padding:1.5rem;margin-bottom:1.5rem;display:flex;align-items:flex-start;gap:1rem">
+        <div style="width:3rem;height:3rem;background:rgba(255,255,255,.15);border-radius:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.5rem">📝</div>
+        <div>
+          <p style="font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.04em;margin:0 0 .25rem">Contestație / Petition</p>
+          <p style="font-size:12px;color:rgba(255,255,255,.7);margin:0;line-height:1.6">
+            Art. 312–316 Codul Vamal al Republicii Moldova · If you believe the customs risk assessment or channel assignment was incorrect, you have the right to contest the decision within <strong style="color:#fbbf24">30 days</strong> of the customs act.
+          </p>
+        </div>
+      </div>
+
+      ${petitionSubmitted ? html`
+        <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:1rem;padding:2rem;text-align:center">
+          <div style="font-size:3rem;margin-bottom:.75rem">✅</div>
+          <h3 style="font-size:18px;font-weight:900;color:#059669;text-transform:uppercase;margin:0 0 .5rem">Petition Submitted</h3>
+          <p style="font-size:14px;font-weight:700;color:#065f46;font-family:monospace;margin:0 0 .75rem">${petitionRef}</p>
+          <p style="font-size:12px;color:#047857;line-height:1.7;margin:0 0 1rem">
+            Your petition has been registered with the ANSA Customs Service. You will receive a response within <strong>30 working days</strong> by email or to the address on file.
+            Reference number: <strong>${petitionRef}</strong>. Keep this for your records.
+          </p>
+          <div style="background:#dcfce7;border:1px solid #86efac;border-radius:.625rem;padding:.75rem 1rem;text-align:left">
+            <p style="font-size:11px;font-weight:700;color:#065f46;text-transform:uppercase;margin:0 0 .375rem">Next steps</p>
+            <p style="font-size:11px;color:#047857;margin:0;line-height:1.6">
+              1. Your petition is reviewed by the ANSA Legal & Contestation Division.<br/>
+              2. The Customs officer's decision and risk profile are independently re-evaluated.<br/>
+              3. If upheld, seized goods are returned or duties refunded within 15 days.<br/>
+              4. If rejected, you may escalate to the Administrative Court (Judecătoria Chișinău) within 30 days.
+            </p>
+          </div>
+        </div>` : html`
+
+      <div class="bg-white r-2xl b-1 bc-sl200 sh-sm of-hidden">
+        <div style="padding:1rem 1.5rem;background:#f8fafc;border-bottom:1px solid #e2e8f0">
+          <p style="font-size:13px;font-weight:900;color:#1e293b;margin:0 0 .25rem">Cerere de Contestare a Deciziei Vamale</p>
+          <p style="font-size:11px;color:#64748b;font-style:italic;margin:0">Request to Contest a Customs Decision · ANSA Republic of Moldova</p>
+        </div>
+
+        <div style="padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:1rem">
+
+          <!-- Section 1: Declaration reference -->
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:.75rem;padding:1rem">
+            <p style="font-size:11px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.08em;margin:0 0 .75rem">1. Customs Declaration Reference</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+              ${[
+                ['MRN / Declaration №', 'mrn', 'e.g. 24MD20300008'],
+                ['Channel assigned', 'channelAssigned', 'RED / YELLOW / GREEN'],
+              ].map(([lbl,key,ph])=>html`
+                <div key=${key}>
+                  <p style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin:0 0 .3rem">${lbl}</p>
+                  <input value=${petition[key]} onInput=${e=>setP(key,e.target.value)} placeholder=${ph}
+                    style="width:100%;padding:.625rem .875rem;border:1px solid #bfdbfe;border-radius:.5rem;font-size:13px;color:#1e293b;background:#fff;box-sizing:border-box;font-family:inherit"/>
+                </div>`)}
+              <div style="grid-column:1/-1">
+                <p style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin:0 0 .3rem">Type of contested decision</p>
+                <select value=${petition.decisionType} onChange=${e=>setP('decisionType',e.target.value)}
+                  style="width:100%;padding:.625rem .875rem;border:1px solid #bfdbfe;border-radius:.5rem;font-size:13px;color:#1e293b;background:#fff">
+                  <option value="">— Select —</option>
+                  <option value="channel">Channel assignment (RED/YELLOW)</option>
+                  <option value="seizure">Goods seizure / confiscation</option>
+                  <option value="duty">Duty / VAT calculation dispute</option>
+                  <option value="delay">Unjustified detention / delay</option>
+                  <option value="conduct">Officer conduct</option>
+                  <option value="other">Other customs decision</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Petitioner identity -->
+          <div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:.75rem;padding:1rem">
+            <p style="font-size:11px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.08em;margin:0 0 .75rem">2. Petitioner Identity</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+              ${[
+                ['Last name / Nume', 'lastName', 'POPESCU'],
+                ['First name / Prenume', 'firstName', 'Ion'],
+                ['Personal ID (IDNP)', 'idnp', '2001234567890'],
+                ['Phone / Telefon', 'phone', '+373 ×× ×× ×× ××'],
+                ['Email', 'email', 'ion.popescu@email.com'],
+              ].map(([lbl,key,ph])=>html`
+                <div key=${key} style="${key==='email'?'grid-column:1/-1':''}">
+                  <p style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin:0 0 .3rem">${lbl}</p>
+                  <input value=${petition[key]} onInput=${e=>setP(key,e.target.value)} placeholder=${ph}
+                    style="width:100%;padding:.625rem .875rem;border:1px solid #e9d5ff;border-radius:.5rem;font-size:13px;color:#1e293b;background:#fff;box-sizing:border-box;font-family:inherit"/>
+                </div>`)}
+            </div>
+          </div>
+
+          <!-- Section 3: Grounds -->
+          <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:.75rem;padding:1rem">
+            <p style="font-size:11px;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:.08em;margin:0 0 .75rem">3. Grounds for Contestation</p>
+            <div style="display:flex;flex-direction:column;gap:.75rem">
+              <div>
+                <p style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin:0 0 .3rem">Disputed grounds — why is the decision wrong?</p>
+                <select value=${petition.groundsDisputed} onChange=${e=>setP('groundsDisputed',e.target.value)}
+                  style="width:100%;padding:.625rem .875rem;border:1px solid #fed7aa;border-radius:.5rem;font-size:13px;color:#1e293b;background:#fff">
+                  <option value="">— Select main ground —</option>
+                  <option value="value">Declared value is correct — invoice provided</option>
+                  <option value="classification">HS code / goods classification is incorrect</option>
+                  <option value="origin">Origin country misidentified</option>
+                  <option value="personal">Goods are personal, not commercial</option>
+                  <option value="aeo">AEO status not recognised at crossing</option>
+                  <option value="ncts">NCTS / transit procedure misapplied</option>
+                  <option value="procedure">Incorrect customs procedure applied</option>
+                  <option value="rights">Rights of defence not respected</option>
+                  <option value="other">Other — explained below</option>
+                </select>
+              </div>
+              <div>
+                <p style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin:0 0 .3rem">Statement of facts / Expunere de fapte</p>
+                <textarea value=${petition.facts} onInput=${e=>setP('facts',e.target.value)} rows="5"
+                  placeholder="Describe clearly what happened, what was declared, and why you believe the customs decision was incorrect. Include dates, goods description, and any relevant details…"
+                  style="width:100%;padding:.75rem .875rem;border:1px solid #fed7aa;border-radius:.5rem;font-size:13px;color:#1e293b;background:#fff;box-sizing:border-box;resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+              </div>
+              <div>
+                <p style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin:0 0 .3rem">Remedy requested / Solicitare</p>
+                <select value=${petition.remedy} onChange=${e=>setP('remedy',e.target.value)}
+                  style="width:100%;padding:.625rem .875rem;border:1px solid #fed7aa;border-radius:.5rem;font-size:13px;color:#1e293b;background:#fff">
+                  <option value="">— What outcome do you seek? —</option>
+                  <option value="revoke">Revoke the customs decision entirely</option>
+                  <option value="channel">Re-assign to GREEN channel</option>
+                  <option value="release">Release of detained goods</option>
+                  <option value="refund">Refund of duties / fines paid</option>
+                  <option value="review">Independent re-assessment of risk profile</option>
+                  <option value="apology">Formal acknowledgment of error</option>
+                </select>
+              </div>
+              <div>
+                <p style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin:0 0 .3rem">Supporting documents (list)</p>
+                <textarea value=${petition.attachments} onInput=${e=>setP('attachments',e.target.value)} rows="2"
+                  placeholder="e.g. Commercial invoice, packing list, AEO certificate, bank transfer proof, photos of goods…"
+                  style="width:100%;padding:.625rem .875rem;border:1px solid #fed7aa;border-radius:.5rem;font-size:13px;color:#1e293b;background:#fff;box-sizing:border-box;resize:vertical;font-family:inherit"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Legal basis -->
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:.75rem;padding:.875rem 1rem">
+            <p style="font-size:11px;font-weight:700;color:#1e293b;margin:0 0 .5rem">Legal basis for contestation</p>
+            <div style="display:flex;flex-direction:column;gap:.3rem">
+              ${[
+                'Art. 312 Codul Vamal — right to contest any customs decision',
+                'Art. 313 — contestation filed within 30 days of the customs act',
+                'Art. 314 — ANSA obligation to respond within 30 working days',
+                'Art. 315 — escalation to Administrative Court if rejected',
+                'Art. 316 — suspension of enforcement during contestation if requested',
+              ].map((law,i)=>html`
+                <div key=${i} style="display:flex;align-items:flex-start;gap:.5rem">
+                  <div style="width:.375rem;height:.375rem;border-radius:50%;background:#3b82f6;flex-shrink:0;margin-top:.3rem"></div>
+                  <p style="font-size:11px;color:#475569;margin:0;line-height:1.5">${law}</p>
+                </div>`)}
+            </div>
+          </div>
+
+          <!-- Consent -->
+          <div style="display:flex;align-items:flex-start;gap:.75rem;padding:.875rem 1rem;background:#fff;border:1px solid #e2e8f0;border-radius:.75rem">
+            <input type="checkbox" id="petition-consent" checked=${petition.consent}
+              onChange=${e=>setP('consent',e.target.checked)}
+              style="width:1.125rem;height:1.125rem;margin-top:.15rem;flex-shrink:0;cursor:pointer"/>
+            <label for="petition-consent" style="font-size:11px;color:#475569;line-height:1.6;cursor:pointer">
+              I confirm that the information provided is accurate and complete. I understand that submitting a false petition is an offence under Art. 352 Codul Contravențional. I consent to ANSA processing my personal data for the purpose of resolving this contestation (GDPR Art. 6(1)(e)).
+            </label>
+          </div>
+
+          <!-- Submit -->
+          ${(!petition.mrn||!petition.lastName||!petition.facts||!petition.consent)?html`
+            <div style="padding:.75rem 1rem;background:#fffbeb;border:1px solid #fcd34d;border-radius:.625rem">
+              <p style="font-size:11px;color:#92400e;margin:0">Complete required fields: MRN · Last name · Statement of facts · Consent checkbox</p>
+            </div>`:null}
+          <button type="button"
+            disabled=${!petition.mrn||!petition.lastName||!petition.facts||!petition.consent}
+            onClick=${()=>{
+              const ref='PET-ANSA-'+new Date().getFullYear()+'-'+String(Math.floor(Math.random()*90000)+10000);
+              setPetitionRef(ref);
+              setPetitionSubmitted(true);
+            }}
+            style=${{width:'100%',padding:'1rem',background:(!petition.mrn||!petition.lastName||!petition.facts||!petition.consent)?'#94a3b8':'#7c3aed',color:'#fff',border:'none',borderRadius:'.75rem',fontSize:'15px',fontWeight:700,cursor:(!petition.mrn||!petition.lastName||!petition.facts||!petition.consent)?'not-allowed':'pointer',textTransform:'uppercase',letterSpacing:'.05em'}}>
+            📝 Submit Petition to ANSA Customs
+          </button>
+
+        </div>
+      </div>`}
     </div>` : null}
 
   </div>`;
